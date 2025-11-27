@@ -42,7 +42,7 @@ public class SubmitLicensesFunction
 			return await req.CreateValidationErrorResponseAsync(error!, cancellationToken);
 		}
 
-		_logger.LogInformation("Request validated for company: {CompanyName}", orderRequest!.Company);
+		_logger.LogInformation("Processing request for company: {CompanyName}", orderRequest!.Company);
 
 		// Process the order
 		var result = await _orchestrator.ProcessOrderAsync(orderRequest, cancellationToken);

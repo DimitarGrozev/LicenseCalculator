@@ -15,23 +15,17 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 		_logger = logger;
 	}
 
-	public async Task<SubmitResultResponse> ProcessOrderAsync(OrderRequest request, CancellationToken ct)
+	public async Task<SubmitResultResponse> ProcessOrderAsync(OrderRequest request, CancellationToken cancellationToken = default)
 	{
-		if (request == null || string.IsNullOrWhiteSpace(request.Company) || string.IsNullOrWhiteSpace(request.Country))
-			throw new ArgumentNullException(nameof(request));
-
-		_logger.LogInformation(
-			"Processing order for company '{CompanyName}' in country '{Country}' with {LicenseCount} licenses",
-			request.Company, request.Country, request.Licenses?.Count ?? 0);
-
 		// 1. Get companies
-		var companies = await _client.GetCompaniesAsync(request.Country, ct);
+		var companies = await _client.GetCompaniesAsync(request.Country, cancellationToken);
+
 		if (companies == null || companies.Count == 0)
 		{
 			throw new DomainException($"No companies found in country '{request.Country}'.");
 		}
 
-		// 2. Find target company (case-insensitive, whitespace-tolerant)
+		// 2. Find target company
 		var company = companies
 			.FirstOrDefault(c => string.Equals(
 				c.CompanyName?.Trim(),
@@ -49,7 +43,7 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 		_logger.LogInformation("Found company: {CompanyId} - {CompanyName}", company.CompanyId, company.CompanyName);
 
 		// 3. Get company details (includes licenses in the response)
-		var companyDetails = await _client.GetCompanyDetailsAsync(company.CompanyId, ct);
+		var companyDetails = await _client.GetCompanyDetailsAsync(company.CompanyId, cancellationToken);
 
 		// Guard against null or empty licenses
 		if (companyDetails.Licenses == null || companyDetails.Licenses.Count == 0)
@@ -64,7 +58,6 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 			.Distinct()
 			.ToList();
 
-		// 5.Check for missing SKUs
 		var missingSkus = requestedSkus
 			.Where(l => !companyDetails.Licenses.Any(license => string.Equals(license.SKU, l, StringComparison.OrdinalIgnoreCase)))
 			.ToList();
@@ -77,13 +70,13 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 				$"Available SKUs: {availableSkus}{(companyDetails.Licenses.Count > 10 ? "..." : "")}");
 		}
 
-		// 6. Fetch prices in parallel and calculate sums
+		// 5. Fetch prices in parallel and calculate sums
 		var priceTasks = requestedSkus
 			.Select(async sku =>
 			{
 				try
 				{
-					var skuPricing = await _client.GetPriceAsync(sku, ct);
+					var skuPricing = await _client.GetPriceAsync(sku, cancellationToken);
 					var companyLicenseInfo = companyDetails.Licenses
 						.First(l => string.Equals(l.SKU, sku, StringComparison.OrdinalIgnoreCase));
 
@@ -118,7 +111,7 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 
 		var orderedLicenseResults = await Task.WhenAll(priceTasks);
 
-		// 7. Build submit request with defensive string handling
+		// 6. Build submit request with defensive string handling
 		var submitRequest = new SubmitResultRequest
 		{
 			CompanyId = company.CompanyId?.Trim() ?? string.Empty,
@@ -135,19 +128,15 @@ public sealed class OrderOrchestrator : IOrderOrchestrator
 			submitRequest.OrderedLicense.Count,
 			submitRequest.OrderedLicense.Sum(x => x.Sum));
 
-		// 8. Submit result
-		var responseMessage = await _client.SubmitResultAsync(submitRequest, ct);
-		var responseContent = await responseMessage.Content.ReadAsStringAsync(ct);
+		// 7. Submit result
+		var responseMessage = await _client.SubmitResultAsync(submitRequest, cancellationToken);
+		var responseContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
 
 		if (!responseMessage.IsSuccessStatusCode)
 		{
 			throw new ExternalApiException(
 				$"SubmitResult failed with status {(int)responseMessage.StatusCode}: {responseContent}");
 		}
-
-		_logger.LogInformation(
-			"Order processed successfully for company {CompanyId}",
-			submitRequest.CompanyId);
 
 		return new SubmitResultResponse { Data = responseContent };
 	}

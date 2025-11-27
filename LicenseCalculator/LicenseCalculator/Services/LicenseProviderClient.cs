@@ -24,9 +24,6 @@ public class LicenseProviderClient : ILicenseProviderClient
 		_options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-		// Validate configuration
-		ValidateOptions(_options);
-
 		_jsonOptions = new JsonSerializerOptions
 		{
 			PropertyNameCaseInsensitive = true,
@@ -258,24 +255,5 @@ public class LicenseProviderClient : ILicenseProviderClient
 		var cleanPath = path.TrimStart('/');
 
 		return $"{baseUrl}/{cleanPath}?code={code}";
-	}
-
-	private static void ValidateOptions(LicenseProviderOptions options)
-	{
-		if (string.IsNullOrWhiteSpace(options.BaseUrl))
-			throw new InvalidOperationException("LicenseProvider:BaseUrl is not configured");
-
-		if (string.IsNullOrWhiteSpace(options.GetCompaniesPath))
-			throw new InvalidOperationException("LicenseProvider:GetCompaniesPath is not configured");
-
-		if (string.IsNullOrWhiteSpace(options.GetCompanyDetailsPath))
-			throw new InvalidOperationException("LicenseProvider:GetCompanyDetailsPath is not configured");
-
-		if (string.IsNullOrWhiteSpace(options.GetPricePath))
-			throw new InvalidOperationException("LicenseProvider:GetPricePath is not configured");
-
-		if (string.IsNullOrWhiteSpace(options.SubmitResultPath))
-			throw new InvalidOperationException("LicenseProvider:SubmitResultPath is not configured");
-
 	}
 }
