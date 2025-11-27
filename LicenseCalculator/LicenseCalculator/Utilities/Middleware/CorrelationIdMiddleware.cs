@@ -44,19 +44,19 @@ public class CorrelationIdMiddleware : IFunctionsWorkerMiddleware
 		context.Items["CorrelationId"] = correlationId;
 
 		// 4) Use a logging scope so all logs include the RequestId
-		using (_logger.BeginScope(new Dictionary<string, object>
+		using (_logger.BeginScope("CorrelationId:{CorrelationId}", correlationId))
 		{
-			["CorrelationId"] = correlationId
-		}))
-		{
-			await next(context);
-		}
+			{
+				_logger.LogInformation("Processing request with CorrelationId");
+				await next(context);
+			}
 
-		// 5) If this was HTTP, add the header to the response as well
-		var response = context.GetHttpResponseData();
-		if (response != null && !response.Headers.Contains(HeaderName))
-		{
-			response.Headers.Add(HeaderName, correlationId);
+			// 5) If this was HTTP, add the header to the response as well
+			var response = context.GetHttpResponseData();
+			if (response != null && !response.Headers.Contains(HeaderName))
+			{
+				response.Headers.Add(HeaderName, correlationId);
+			}
 		}
 	}
 }

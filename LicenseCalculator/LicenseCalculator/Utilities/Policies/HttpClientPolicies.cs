@@ -8,7 +8,7 @@ namespace LicenseCalculator.Utilities.Policies;
 public static class HttpClientPolicies
 {
 	private const int DefaultRetryCount = 3;
-	private const int DefaultTimeoutSeconds = 30;
+	private const int DefaultTimeoutSeconds = 300;
 	private const int DefaultCircuitBreakerThreshold = 5;
 	private const int DefaultCircuitBreakerDurationSeconds = 30;
 	private const int BaseDelayMilliseconds = 100;

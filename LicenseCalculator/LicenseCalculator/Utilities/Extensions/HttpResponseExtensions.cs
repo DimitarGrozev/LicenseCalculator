@@ -134,7 +134,6 @@ public static class HttpResponseExtensions
 	public static async Task<HttpResponseData> CreateValidationErrorResponseAsync(
 		this HttpRequestData req,
 		string validationErrors,
-		string? requestId = null,
 		CancellationToken cancellationToken = default)
 	{
 		var response = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -144,9 +143,7 @@ public static class HttpResponseExtensions
 		{
 			Success = false,
 			Error = $"Validation failed: {validationErrors}",
-			ValidationErrors = validationErrors,
 			StatusCode = 400,
-			RequestId = requestId,
 			Timestamp = DateTime.UtcNow
 		};
 
@@ -164,7 +161,6 @@ public static class HttpResponseExtensions
 		this HttpRequestData req,
 		string resultData,
 		string companyName,
-		string? requestId = null,
 		CancellationToken cancellationToken = default)
 	{
 		var response = req.CreateResponse(HttpStatusCode.OK);
@@ -180,7 +176,6 @@ public static class HttpResponseExtensions
 				Result = resultData,
 				ProcessedAt = DateTime.UtcNow
 			},
-			RequestId = requestId,
 			Timestamp = DateTime.UtcNow
 		};
 

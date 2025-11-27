@@ -31,36 +31,25 @@ public class SubmitLicensesFunction
 		FunctionContext executionContext,
 		CancellationToken cancellationToken = default)
 	{
-		var requestId = executionContext.Items["CorrelationId"] as string;
-
-		_logger.LogInformation("Request {RequestId} started", requestId);
+		_logger.LogInformation("Request started");
 
 		// Validate request body using FluentValidation
 		var (isValid, error, orderRequest) = await req.ValidateRequestBodyWithFluentAsync(_validator);
 
 		if (!isValid)
 		{
-			_logger.LogWarning("Request {RequestId}: Validation failed - {Error}", requestId, error);
-			return await req.CreateValidationErrorResponseAsync(error!, requestId, cancellationToken);
+			_logger.LogWarning("Request: Validation failed - {Error}", error);
+			return await req.CreateValidationErrorResponseAsync(error!, cancellationToken);
 		}
 
-		_logger.LogInformation("Request {RequestId} validated for company: {CompanyName}",
-			requestId, orderRequest!.CompanyName);
+		_logger.LogInformation("Request validated for company: {CompanyName}", orderRequest!.Company);
 
 		// Process the order
 		var result = await _orchestrator.ProcessOrderAsync(orderRequest, cancellationToken);
 
-		_logger.LogInformation(
-			"Request {RequestId} completed successfully for company: {CompanyName}",
-			requestId,
-			orderRequest.CompanyName);
+		_logger.LogInformation("Request completed successfully for company: {CompanyName}", orderRequest.Company);
 
 		// Return success response using extension method
-		return await req.CreateOrderSuccessResponseAsync(
-			result.Raw,
-			orderRequest.CompanyName,
-			requestId,
-			cancellationToken);
-
+		return await req.CreateOrderSuccessResponseAsync(result.Data, orderRequest.Company, cancellationToken);
 	}
 }
