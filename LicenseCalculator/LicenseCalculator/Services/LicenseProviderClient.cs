@@ -216,7 +216,9 @@ public class LicenseProviderClient : ILicenseProviderClient
 
 			try
 			{
-				return JsonSerializer.Deserialize<T>(responseContent, _jsonOptions);
+				var innerJson = JsonSerializer.Deserialize<string>(responseContent);
+
+				return JsonSerializer.Deserialize<T>(innerJson!, _jsonOptions);
 			}
 			catch (JsonException ex)
 			{
@@ -236,7 +238,7 @@ public class LicenseProviderClient : ILicenseProviderClient
 		{
 			_logger.LogWarning("Request was cancelled by user");
 			throw;
-		}
+		}		
 		catch (TaskCanceledException ex)
 		{
 			_logger.LogError("Request timed out for URL: {Url}", url.Split('?')[0]);

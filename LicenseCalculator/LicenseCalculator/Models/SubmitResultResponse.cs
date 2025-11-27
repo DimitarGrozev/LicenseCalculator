@@ -2,5 +2,5 @@
 
 public sealed class SubmitResultResponse
 {
-	public string Raw { get; set; } = default!;
+	public string Data { get; set; } = default!;
 }
