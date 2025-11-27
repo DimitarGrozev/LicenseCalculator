@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36616.10 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseCalculator", "LicenseCalculator\LicenseCalculator.csproj", "{FC40A65E-67A8-4F33-B4F2-125D9F920817}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FC40A65E-67A8-4F33-B4F2-125D9F920817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC40A65E-67A8-4F33-B4F2-125D9F920817}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC40A65E-67A8-4F33-B4F2-125D9F920817}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC40A65E-67A8-4F33-B4F2-125D9F920817}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2171F8D5-FC00-4B40-A9BB-1A15B677078D}
+	EndGlobalSection
+EndGlobal

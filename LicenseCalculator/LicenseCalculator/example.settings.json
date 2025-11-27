@@ -1,0 +1,20 @@
+{
+	"IsEncrypted": false,
+	"Values": {
+		"AzureWebJobsStorage": "UseDevelopmentStorage=true",
+		"FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+		"KeyVaultUri": "https://redacted-key-vault.vault.azure.net/"
+	},
+	"LicenseProvider": {
+		"BaseUrl": "<base_url>",
+		"GetCompaniesPath": "<path>",
+		"GetCompanyDetailsPath": "<path>",
+		"GetPricePath": "<path>",
+		"SubmitResultPath": "<path>",
+		"GetCompaniesCode": "<code>",
+		"GetCompanyDetailsCode": "<code>",
+		"GetPriceCode": "<code>",
+		"SubmitResultCode": "<code>",
+		"DefaultTimeoutSeconds": 10
+	}
+}
