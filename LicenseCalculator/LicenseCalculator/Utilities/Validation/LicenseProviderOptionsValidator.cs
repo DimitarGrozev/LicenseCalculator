@@ -30,12 +30,6 @@ public class LicenseProviderOptionsValidator : IValidateOptions<LicenseProviderO
 		ValidateCode(nameof(options.GetPriceCode), options.GetPriceCode, failures);
 		ValidateCode(nameof(options.SubmitResultCode), options.SubmitResultCode, failures);
 
-		// Validate timeout range
-		if (options.DefaultTimeoutSeconds < 1 || options.DefaultTimeoutSeconds > 300)
-		{
-			failures.Add($"LicenseProvider:DefaultTimeoutSeconds must be between 1 and 300 seconds, but was {options.DefaultTimeoutSeconds}");
-		}
-
 		// Check for duplicate codes
 		var codes = new[] { options.GetCompaniesCode, options.GetCompanyDetailsCode, options.GetPriceCode, options.SubmitResultCode };
 		var duplicates = codes.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key);

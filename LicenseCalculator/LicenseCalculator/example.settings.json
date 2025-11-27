@@ -3,7 +3,7 @@
 	"Values": {
 		"AzureWebJobsStorage": "UseDevelopmentStorage=true",
 		"FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-		"KeyVaultUri": "https://redacted-key-vault.vault.azure.net/"
+		"KeyVaultUri": "<keyvault_url>"
 	},
 	"LicenseProvider": {
 		"BaseUrl": "<base_url>",
@@ -14,7 +14,6 @@
 		"GetCompaniesCode": "<code>",
 		"GetCompanyDetailsCode": "<code>",
 		"GetPriceCode": "<code>",
-		"SubmitResultCode": "<code>",
-		"DefaultTimeoutSeconds": 10
+		"SubmitResultCode": "<code>"
 	}
 }

@@ -33,7 +33,4 @@ public class LicenseProviderOptions
 
 	[Required(ErrorMessage = "LicenseProvider:SubmitResultCode is required")]
 	public string SubmitResultCode { get; set; } = default!;
-
-	[Range(1, 300, ErrorMessage = "LicenseProvider:DefaultTimeoutSeconds must be between 1 and 300 seconds")]
-	public int DefaultTimeoutSeconds { get; set; } = 10;
 }
