@@ -27,66 +27,6 @@ LicenseCalculator.Tests/
 └── Services/                           # Tests for business logic
 ```
 
-##  Architecture Overview
-
-### Clean Architecture Layers
-
-1. **Presentation Layer** (`Functions/`)
-   - Azure Functions HTTP triggers
-   - Request/response handling
-   - Input validation coordination
-
-2. **Business Logic Layer** (`Services/`)
-   - Order processing orchestration
-   - Business rules enforcement
-   - External service integration
-
-3. **Infrastructure Layer** (`Utilities/`)
-   - HTTP clients
-   - Middleware
-   - Configuration
-   - Cross-cutting concerns
-
-### Key Architectural Patterns
-
-- **Dependency Injection**: Full DI container setup with service registration
-- **Options Pattern**: Strongly-typed configuration with validation
-- **Middleware Pipeline**: Request correlation and global error handling
-- **Repository Pattern**: Abstracted external API access
-- **Validation**: FluentValidation with custom rules
-- **Resilience**: Polly policies for HTTP retries and timeouts
-
-##  Features
-
-###  Request Processing
-- **HTTP Trigger**: `/api/submit-licenses` endpoint
-- **Model Binding**: Automatic JSON deserialization with validation
-- **Business Logic**: Order validation, company lookup, price calculation
-- **External Integration**: License provider API communication
-
-###  Validation & Error Handling
-- **Input Validation**: FluentValidation with custom SKU format rules
-- **Business Validation**: Company existence, license availability
-- **Global Error Handling**: Middleware-based exception handling
-- **Structured Responses**: Consistent JSON error responses
-
-### Observability & Monitoring
-- **Correlation IDs**: Request tracking across all services and logs
-- **Structured Logging**: Scoped logging with automatic correlation
-- **Application Insights**: Telemetry and performance monitoring
-- **Request/Response Logging**: Comprehensive audit trail
-
-###  Configuration & Security
-- **Azure Key Vault**: Production secrets management
-- **User Secrets**: Local development configuration
-- **Options Validation**: Startup configuration validation
-- **Environment-Specific Settings**: Development/production configurations
-
-###  Resilience & Performance
-- **Retry Policies**: Automatic retry with exponential backoff
-- **Timeout Handling**: Request timeout configuration
-- **Parallel Processing**: Concurrent price fetching for multiple SKUs
-- **Connection Pooling**: Optimized HTTP client usage
 
 ## Technology Stack
 
@@ -109,16 +49,7 @@ LicenseCalculator.Tests/
 {
   "country": "Latvia",
   "companyName": "LIDO",
-  "orderedLicenses": [
-    {
-      "sku": "TPLV7893-85",
-      "count": 10
-    },
-    {
-      "sku": "TPLV7884-85", 
-      "count": 5
-    }
-  ]
+  "licenses": ["TPLV7893-85"]
 }
 ```
 
@@ -245,9 +176,7 @@ dotnet test LicenseCalculator.Tests
      -d '{
        "country": "Latvia",
        "companyName": "LIDO", 
-       "orderedLicenses": [
-         {"sku": "TPLV7893-85", "count": 10}
-       ]
+       "licenses": ["TPLV7893-85"]
      }'
    ```
 
