@@ -3,7 +3,7 @@
 
 An Azure Functions application built with .NET 8 that processes license orders by integrating with external license provider APIs. The application features comprehensive validation, error handling, and observability.
 
-[![LicenseCalculator Architecture](./docs/diagram.png)](./docs/diagram.png)
+<img width="877" height="581" alt="diagram" src="https://github.com/user-attachments/assets/a9a47682-0c97-4a3f-b7d4-be08b7ca69db" />
 
 ##  Project Structure
 
