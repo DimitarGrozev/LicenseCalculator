@@ -1,0 +1,513 @@
+{
+	"info": {
+		"_postman_id": "08625430-5654-4cc3-b495-f25902fba0b6",
+		"name": "ProvEngine License Calculator - LIDO Latvia Copy",
+		"description": "Complete workflow to calculate license costs for company LIDO in Latvia with SKUs TPLV7893-85 and TPLV7884-85",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Get Companies in Latvia",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse response",
+							"var jsonData = pm.response.json();",
+							"",
+							"// Ensure we are working with an array",
+							"var companies;",
+							"if (Array.isArray(jsonData)) {",
+							"    companies = jsonData;",
+							"} else if (typeof jsonData === 'string') {",
+							"    try {",
+							"        companies = JSON.parse(jsonData);",
+							"    } catch (e) {",
+							"        console.error('Failed to parse response string as JSON array', e);",
+							"        companies = [];",
+							"    }",
+							"} else {",
+							"    console.error('Unexpected response shape, expected array or JSON string:', jsonData);",
+							"    companies = [];",
+							"}",
+							"",
+							"// Find LIDO company",
+							"var lidoCompany = companies.find(c => (c.CompanyName || '').trim().toUpperCase() === 'LIDO');",
+							"",
+							"if (lidoCompany) {",
+							"    // Save company ID for next request",
+							"    pm.collectionVariables.set('companyId', lidoCompany.CompanyId);",
+							"    pm.collectionVariables.set('companyName', lidoCompany.CompanyName);",
+							"    console.log('Found LIDO - Company ID: ' + lidoCompany.CompanyId);",
+							"    ",
+							"    // Test assertions",
+							"    pm.test('Status code is 200', function () {",
+							"        pm.response.to.have.status(200);",
+							"    });",
+							"    ",
+							"    pm.test('LIDO company found', function () {",
+							"        pm.expect(lidoCompany).to.be.an('object');",
+							"        pm.expect(lidoCompany.CompanyId).to.not.be.empty;",
+							"    });",
+							"} else {",
+							"    pm.test('LIDO company found', function () {",
+							"        pm.expect.fail('LIDO company not found in Latvia');",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"country\": \"Latvia\"\n}"
+				},
+				"url": {
+					"raw": "https://provengine-staging.azurewebsites.net/api/test-api-getCompanyId?code=97K9wBj3tHX3FX1SiMNQQ9VJO0lb3Yg/TfFII8uTbuSz0bSbHB6j7g==",
+					"protocol": "https",
+					"host": [
+						"provengine-staging",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"test-api-getCompanyId"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "97K9wBj3tHX3FX1SiMNQQ9VJO0lb3Yg/TfFII8uTbuSz0bSbHB6j7g=="
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Company Details for LIDO",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse response",
+							"var response =  pm.response.json();",
+							"var jsonData = JSON.parse(response);",
+							"",
+							"// Save company details",
+							"pm.collectionVariables.set('login', jsonData.login);",
+							"pm.collectionVariables.set('contactName', jsonData.contact.name);",
+							"pm.collectionVariables.set('contactSurname', jsonData.contact.surname);",
+							"",
+							"// Find the requested SKUs and save their counts",
+							"var sku1 = 'TPLV7893-85';",
+							"var sku2 = 'TPLV7884-85';",
+							"",
+							"var license1 = jsonData.licenses.find(l => l.SKU === sku1);",
+							"var license2 = jsonData.licenses.find(l => l.SKU === sku2);",
+							"",
+							"if (license1) {",
+							"    pm.collectionVariables.set('sku1', sku1);",
+							"    pm.collectionVariables.set('sku1Count', license1.count);",
+							"    console.log(sku1 + ' - Count: ' + license1.count);",
+							"} else {",
+							"    console.error(sku1 + ' not found in licenses');",
+							"}",
+							"",
+							"if (license2) {",
+							"    pm.collectionVariables.set('sku2', sku2);",
+							"    pm.collectionVariables.set('sku2Count', license2.count);",
+							"    console.log(sku2 + ' - Count: ' + license2.count);",
+							"} else {",
+							"    console.error(sku2 + ' not found in licenses');",
+							"}",
+							"",
+							"// Test assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Company details retrieved', function () {",
+							"    pm.expect(jsonData.company).to.not.be.empty;",
+							"    pm.expect(jsonData.login).to.not.be.empty;",
+							"    pm.expect(jsonData.licenses).to.be.an('array');",
+							"});",
+							"",
+							"pm.test('Both SKUs found in licenses', function () {",
+							"    pm.expect(license1).to.be.an('object');",
+							"    pm.expect(license2).to.be.an('object');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"CompanyId\": \"{{companyId}}\"\n}"
+				},
+				"url": {
+					"raw": "https://provengine-staging.azurewebsites.net/api/test-api-getCompanyDetails?code=RFB5gRxyqwGu5o1cPYJTvJ9C28U1Zz3R17QoC/xxnz9ZjK6CsLXiew==",
+					"protocol": "https",
+					"host": [
+						"provengine-staging",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"test-api-getCompanyDetails"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "RFB5gRxyqwGu5o1cPYJTvJ9C28U1Zz3R17QoC/xxnz9ZjK6CsLXiew=="
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Get Price for SKU TPLV7893-85",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse response",
+							"var response = pm.response.json();",
+							"var jsonData = JSON.parse(response);",
+							"",
+							"// Save price for calculation",
+							"pm.collectionVariables.set('sku1Price', jsonData.price);",
+							"",
+							"// Calculate sum for this SKU",
+							"var count = pm.collectionVariables.get('sku1Count');",
+							"var sum = jsonData.price * count;",
+							"pm.collectionVariables.set('sku1Sum', sum);",
+							"",
+							"console.log('SKU: ' + jsonData.SKU);",
+							"console.log('Price: ' + jsonData.price);",
+							"console.log('Count: ' + count);",
+							"console.log('Sum: ' + sum);",
+							"",
+							"// Test assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Price retrieved', function () {",
+							"    pm.expect(jsonData.SKU).to.not.be.empty;",
+							"    pm.expect(jsonData.price).to.be.a('number');",
+							"    pm.expect(jsonData.price).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"SKU\": \"{{sku1}}\"\n}"
+				},
+				"url": {
+					"raw": "https://provengine-staging.azurewebsites.net/api/test-api-getPrice?code=3OK7wJUxB2VYrNwG2hOiag54l8Xc4xbpcHpImO4ICn1cebNk/6YI/A==",
+					"protocol": "https",
+					"host": [
+						"provengine-staging",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"test-api-getPrice"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "3OK7wJUxB2VYrNwG2hOiag54l8Xc4xbpcHpImO4ICn1cebNk/6YI/A=="
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Get Price for SKU TPLV7884-85",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse response",
+							"var response = pm.response.json();",
+							"var jsonData = JSON.parse(response);",
+							"",
+							"// Save price for calculation",
+							"pm.collectionVariables.set('sku2Price', jsonData.price);",
+							"",
+							"// Calculate sum for this SKU",
+							"var count = pm.collectionVariables.get('sku2Count');",
+							"var sum = jsonData.price * count;",
+							"pm.collectionVariables.set('sku2Sum', sum);",
+							"",
+							"console.log('SKU: ' + jsonData.SKU);",
+							"console.log('Price: ' + jsonData.price);",
+							"console.log('Count: ' + count);",
+							"console.log('Sum: ' + sum);",
+							"",
+							"// Calculate grand total",
+							"var sku1Sum = parseFloat(pm.collectionVariables.get('sku1Sum'));",
+							"var sku2Sum = parseFloat(pm.collectionVariables.get('sku2Sum'));",
+							"var grandTotal = sku1Sum + sku2Sum;",
+							"pm.collectionVariables.set('grandTotal', grandTotal);",
+							"",
+							"console.log('===================');",
+							"console.log('Grand Total: ' + grandTotal);",
+							"console.log('===================');",
+							"",
+							"// Test assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Price retrieved', function () {",
+							"    pm.expect(jsonData.SKU).to.not.be.empty;",
+							"    pm.expect(jsonData.price).to.be.a('number');",
+							"    pm.expect(jsonData.price).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"SKU\": \"{{sku2}}\"\n}"
+				},
+				"url": {
+					"raw": "https://provengine-staging.azurewebsites.net/api/test-api-getPrice?code=3OK7wJUxB2VYrNwG2hOiag54l8Xc4xbpcHpImO4ICn1cebNk/6YI/A==",
+					"protocol": "https",
+					"host": [
+						"provengine-staging",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"test-api-getPrice"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "3OK7wJUxB2VYrNwG2hOiag54l8Xc4xbpcHpImO4ICn1cebNk/6YI/A=="
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Submit Final Result",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Build the submit payload using collected variables",
+							"var rawSum1 = parseFloat(pm.collectionVariables.get('sku1Sum'));",
+							"var sum1Rounded = Math.round((rawSum1 + Number.EPSILON) * 100) / 100;",
+							"",
+							"var rawSum2 = parseFloat(pm.collectionVariables.get('sku2Sum'));",
+							"var sum2Rounded = Math.round((rawSum2 + Number.EPSILON) * 100) / 100;",
+							"",
+							"",
+							"var payload = {",
+							"    CompanyId: pm.collectionVariables.get('companyId'),",
+							"    CompanyName: pm.collectionVariables.get('companyName'),",
+							"    UserLogin: pm.collectionVariables.get('login'),",
+							"    UserName: pm.collectionVariables.get('contactName'),",
+							"    OrderedLicense: [",
+							"        {",
+							"            SKU: pm.collectionVariables.get('sku1'),",
+							"            Price: parseFloat(pm.collectionVariables.get('sku1Price')),",
+							"            Count: parseInt(pm.collectionVariables.get('sku1Count')),",
+							"            Sum: sum1Rounded",
+							"        },",
+							"        {",
+							"            SKU: pm.collectionVariables.get('sku2'),",
+							"            Price: parseFloat(pm.collectionVariables.get('sku2Price')),",
+							"            Count: parseInt(pm.collectionVariables.get('sku2Count')),",
+							"            Sum: sum2Rounded",
+							"        }",
+							"    ]",
+							"};",
+							"",
+							"// Save as variable for request body",
+							"pm.collectionVariables.set('submitPayload', JSON.stringify(payload, null, 2));",
+							"",
+							"console.log('Submit Payload:');",
+							"console.log(JSON.stringify(payload, null, 2));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test assertions",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test('Submit successful', function () {",
+							"    let text = pm.response.text().replace(/^\"|\"$/g, ''); // remove wrapping quotes",
+							"    pm.expect(text).to.equal(\"Good Job!\");",
+							"});",
+							"",
+							"console.log('===================');",
+							"console.log('WORKFLOW COMPLETE!');",
+							"console.log('===================');",
+							"console.log('Company: ' + pm.collectionVariables.get('companyName'));",
+							"console.log('Grand Total: ' + pm.collectionVariables.get('grandTotal'));",
+							"console.log('Response: ' + pm.response.text());"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{submitPayload}}"
+				},
+				"url": {
+					"raw": "https://provengine-staging.azurewebsites.net/api/test-api-finalStep?code=W948OubG7kgHIjVkUT/H8rOS6k5NAkP6QUTavEC4SYFW06meBr5WLg==",
+					"protocol": "https",
+					"host": [
+						"provengine-staging",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"test-api-finalStep"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "W948OubG7kgHIjVkUT/H8rOS6k5NAkP6QUTavEC4SYFW06meBr5WLg=="
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "companyId",
+			"value": ""
+		},
+		{
+			"key": "companyName",
+			"value": ""
+		},
+		{
+			"key": "login",
+			"value": ""
+		},
+		{
+			"key": "contactName",
+			"value": ""
+		},
+		{
+			"key": "contactSurname",
+			"value": ""
+		},
+		{
+			"key": "sku1",
+			"value": "TPLV7893-85"
+		},
+		{
+			"key": "sku1Count",
+			"value": ""
+		},
+		{
+			"key": "sku1Price",
+			"value": ""
+		},
+		{
+			"key": "sku1Sum",
+			"value": ""
+		},
+		{
+			"key": "sku2",
+			"value": "TPLV7884-85"
+		},
+		{
+			"key": "sku2Count",
+			"value": ""
+		},
+		{
+			"key": "sku2Price",
+			"value": ""
+		},
+		{
+			"key": "sku2Sum",
+			"value": ""
+		},
+		{
+			"key": "grandTotal",
+			"value": ""
+		},
+		{
+			"key": "submitPayload",
+			"value": ""
+		}
+	]
+}
