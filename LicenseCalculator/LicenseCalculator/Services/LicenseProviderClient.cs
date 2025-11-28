@@ -20,9 +20,9 @@ public class LicenseProviderClient : ILicenseProviderClient
 		IOptions<LicenseProviderOptions> options,
 		ILogger<LicenseProviderClient> logger)
 	{
-		_httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-		_options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+		_httpClient = httpClient;
+		_options = options?.Value!;
+		_logger = logger;
 
 		_jsonOptions = new JsonSerializerOptions
 		{
@@ -41,24 +41,12 @@ public class LicenseProviderClient : ILicenseProviderClient
 
 		_logger.LogDebug("Fetching companies for country: {Country}", country);
 
-		try
-		{
-			var response = await PostAsync<List<Company>>(url, requestBody, ct);
-			var companies = response ?? new List<Company>();
+		var response = await PostAsync<List<Company>>(url, requestBody, ct);
+		var companies = response ?? new List<Company>();
 
-			_logger.LogInformation("Retrieved {Count} companies for country: {Country}", companies.Count, country);
+		_logger.LogInformation("Retrieved {Count} companies for country: {Country}", companies.Count, country);
 
-			return companies;
-		}
-		catch (ExternalApiException)
-		{
-			throw;
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Unexpected error fetching companies for country: {Country}", country);
-			throw new ExternalApiException($"Failed to fetch companies for country '{country}'", ex);
-		}
+		return companies;
 	}
 
 	public async Task<CompanyDetails> GetCompanyDetailsAsync(string companyId, CancellationToken ct)
@@ -71,42 +59,30 @@ public class LicenseProviderClient : ILicenseProviderClient
 
 		_logger.LogDebug("Fetching company details for: {CompanyId}", companyId);
 
-		try
+		var response = await PostAsync<CompanyDetails>(url, requestBody, ct);
+
+		if (response == null)
 		{
-			var response = await PostAsync<CompanyDetails>(url, requestBody, ct);
-
-			if (response == null)
-			{
-				throw new ExternalApiException($"Received null response for company details: {companyId}");
-			}
-
-			// Validate essential fields
-			if (string.IsNullOrWhiteSpace(response.Company))
-			{
-				_logger.LogWarning("Company details missing 'Company' field for ID: {CompanyId}", companyId);
-			}
-
-			if (string.IsNullOrWhiteSpace(response.Login))
-			{
-				_logger.LogWarning("Company details missing 'Login' field for ID: {CompanyId}", companyId);
-			}
-
-			_logger.LogDebug(
-				"Retrieved company details: {Company}, Licenses: {LicenseCount}",
-				response.Company,
-				response.Licenses?.Count ?? 0);
-
-			return response;
+			throw new ExternalApiException($"Received null response for company details: {companyId}");
 		}
-		catch (ExternalApiException)
+
+		// Validate essential fields
+		if (string.IsNullOrWhiteSpace(response.Company))
 		{
-			throw;
+			_logger.LogWarning("Company details missing 'Company' field for ID: {CompanyId}", companyId);
 		}
-		catch (Exception ex)
+
+		if (string.IsNullOrWhiteSpace(response.Login))
 		{
-			_logger.LogError(ex, "Unexpected error fetching company details for: {CompanyId}", companyId);
-			throw new ExternalApiException($"Failed to fetch company details for '{companyId}'", ex);
+			_logger.LogWarning("Company details missing 'Login' field for ID: {CompanyId}", companyId);
 		}
+
+		_logger.LogDebug(
+			"Retrieved company details: {Company}, Licenses: {LicenseCount}",
+			response.Company,
+			response.Licenses?.Count ?? 0);
+
+		return response;
 	}
 
 	public async Task<SkuPricing> GetPriceAsync(string sku, CancellationToken ct)
@@ -119,35 +95,23 @@ public class LicenseProviderClient : ILicenseProviderClient
 
 		_logger.LogDebug("Fetching price for SKU: {SKU}", sku);
 
-		try
+		var response = await PostAsync<SkuPricing>(url, requestBody, ct);
+
+		if (response == null)
 		{
-			var response = await PostAsync<SkuPricing>(url, requestBody, ct);
-
-			if (response == null)
-			{
-				throw new ExternalApiException($"Received null response for price of SKU: {sku}");
-			}
-
-			// Validate price data
-			if (string.IsNullOrWhiteSpace(response.SKU))
-			{
-				_logger.LogWarning("Price response missing SKU field for requested SKU: {SKU}", sku);
-				response.SKU = sku; // Use requested SKU as fallback
-			}
-
-			_logger.LogDebug("Retrieved price for SKU {SKU}: {Price}", response.SKU, response.Price);
-
-			return response;
+			throw new ExternalApiException($"Received null response for price of SKU: {sku}");
 		}
-		catch (ExternalApiException)
+
+		// Validate price data
+		if (string.IsNullOrWhiteSpace(response.SKU))
 		{
-			throw;
+			_logger.LogWarning("Price response missing SKU field for requested SKU: {SKU}", sku);
+			response.SKU = sku; // Use requested SKU as fallback
 		}
-		catch (Exception ex)
-		{
-			_logger.LogError(ex, "Unexpected error fetching price for SKU: {SKU}", sku);
-			throw new ExternalApiException($"Failed to fetch price for SKU '{sku}'", ex);
-		}
+
+		_logger.LogDebug("Retrieved price for SKU {SKU}: {Price}", response.SKU, response.Price);
+
+		return response;
 	}
 
 	public async Task<HttpResponseMessage> SubmitResultAsync(SubmitResultRequest request, CancellationToken ct)
@@ -162,84 +126,55 @@ public class LicenseProviderClient : ILicenseProviderClient
 			request.CompanyId,
 			request.OrderedLicense?.Count ?? 0);
 
-		try
-		{
-			var json = JsonSerializer.Serialize(request, _jsonOptions);
-			var content = new StringContent(json, Encoding.UTF8, "application/json");
+		var json = JsonSerializer.Serialize(request, _jsonOptions);
+		var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-			var response = await _httpClient.PostAsync(url, content, ct);
+		var response = await _httpClient.PostAsync(url, content, ct);
 
-			_logger.LogDebug(
-				"Submit result response: {StatusCode}",
-				(int)response.StatusCode);
+		_logger.LogDebug("Submit result response: {StatusCode}", (int)response.StatusCode);
 
-			return response;
-		}
-		catch (Exception ex) when (ex is not HttpRequestException)
-		{
-			_logger.LogError(ex, "Unexpected error submitting result for company: {CompanyId}", request.CompanyId);
-			throw new ExternalApiException($"Failed to submit result for company '{request.CompanyId}'", ex);
-		}
+		return response;
 	}
 
 	private async Task<T?> PostAsync<T>(string url, object requestBody, CancellationToken ct)
 	{
+		var json = JsonSerializer.Serialize(requestBody, _jsonOptions);
+		var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+		using var response = await _httpClient.PostAsync(url, content, ct);
+
+		var responseContent = await response.Content.ReadAsStringAsync(ct);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			_logger.LogError(
+				"API request failed. URL: {Url}, Status: {StatusCode}, Response: {Response}",
+				url.Split('?')[0], // Log URL without query params (might contain codes)
+				(int)response.StatusCode,
+				responseContent);
+
+			throw new ExternalApiException(
+				$"API call failed with status {(int)response.StatusCode}: {response.ReasonPhrase}");
+		}
+
+		if (string.IsNullOrWhiteSpace(responseContent))
+		{
+			_logger.LogWarning("Received empty response from API");
+			return default;
+		}
+
 		try
 		{
-			var json = JsonSerializer.Serialize(requestBody, _jsonOptions);
-			var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-			using var response = await _httpClient.PostAsync(url, content, ct);
-
-			var responseContent = await response.Content.ReadAsStringAsync(ct);
-
-			if (!response.IsSuccessStatusCode)
-			{
-				_logger.LogError(
-					"API request failed. URL: {Url}, Status: {StatusCode}, Response: {Response}",
-					url.Split('?')[0], // Log URL without query params (might contain codes)
-					(int)response.StatusCode,
-					responseContent);
-
-				throw new ExternalApiException(
-					$"API call failed with status {(int)response.StatusCode}: {response.ReasonPhrase}");
-			}
-
-			if (string.IsNullOrWhiteSpace(responseContent))
-			{
-				_logger.LogWarning("Received empty response from API");
-				return default;
-			}
-
-			try
-			{
-				var innerJson = JsonSerializer.Deserialize<string>(responseContent);
-
-				return JsonSerializer.Deserialize<T>(innerJson!, _jsonOptions);
-			}
-			catch (JsonException ex)
-			{
-				_logger.LogError(
-					ex,
-					"Failed to deserialize response. Content: {Content}",
-					responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent);
-				throw new ExternalApiException("Failed to deserialize API response", ex);
-			}
+			var innerJson = JsonSerializer.Deserialize<string>(responseContent);
+			return JsonSerializer.Deserialize<T>(innerJson!, _jsonOptions);
 		}
-		catch (HttpRequestException ex)
+		catch (JsonException ex)
 		{
-			_logger.LogError(ex, "HTTP request failed for URL: {Url}", url.Split('?')[0]);
-			throw new ExternalApiException("HTTP request failed", ex);
-		}
-		catch (TaskCanceledException ex) when (ex.CancellationToken == ct)
-		{
-			_logger.LogWarning("Request was cancelled by user");
-			throw;
-		}		
-		catch (TaskCanceledException ex)
-		{
-			_logger.LogError("Request timed out for URL: {Url}", url.Split('?')[0]);
-			throw new ExternalApiException("Request timed out", ex);
+			_logger.LogError(
+				ex,
+				"Failed to deserialize response. Content: {Content}",
+				responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent);
+			throw new ExternalApiException("Failed to deserialize API response", ex);
 		}
 	}
 
